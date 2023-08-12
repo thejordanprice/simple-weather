@@ -13,14 +13,23 @@ document.addEventListener('DOMContentLoaded', function() {
                 const location = formattedData.find(item => item.zipCode === inputZip);
                 if (location) {
                     const { latitude, longitude } = location;
-                    const weatherUrl = `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&hourly=temperature_2m,weathercode_1h`;
+                    const weatherUrl = `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&hourly=temperature_2m,weathercodes_1h&temperature_unit=fahrenheit`;
 
                     fetch(weatherUrl)
                         .then(response => response.json())
                         .then(data => {
-                            const temperature = data.hourly.temperature_2m[0].value;
-                            const weatherDescription = data.hourly.weathercode_1h[0].value;
-                            weatherOutput.innerHTML = `Temperature in ${inputZip}: ${temperature}°C<br>Weather: ${weatherDescription}`;
+                            const hourlyData = data.hourly;
+
+                            if (hourlyData && hourlyData.temperature_2m && hourlyData.weathercodes_1h) {
+                                const temperature = hourlyData.temperature_2m[0].value;
+                                const weatherCode = hourlyData.weathercodes_1h[0].value;
+
+                                const weatherDescription = getWeatherDescription(weatherCode);
+
+                                weatherOutput.innerHTML = `Temperature in ${inputZip}: ${temperature}°F<br>Weather: ${weatherDescription}`;
+                            } else {
+                                weatherOutput.innerHTML = 'Weather data not available.';
+                            }
                         })
                         .catch(error => {
                             console.error('Error fetching weather data:', error);
@@ -35,4 +44,12 @@ document.addEventListener('DOMContentLoaded', function() {
                 weatherOutput.innerHTML = 'Error loading or processing data.';
             });
     });
+
+    function getWeatherDescription(weatherCode) {
+        // Replace this with your logic to map weather codes to descriptions
+        const weatherDescriptions = {
+            // Add your mappings here
+        };
+        return weatherDescriptions[weatherCode] || 'Unknown';
+    }
 });
